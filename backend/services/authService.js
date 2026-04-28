@@ -1,43 +1,61 @@
-const { Sequelize } = require("sequelize");
-const { User } = require("../models");
+const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwtHelper");
+const { User } = require("../models");
+const token = generateToken(User);
 
-/**
- * Register a new user
- * @param {string} username - Username
- * @param {string} email - Email
- * @param {string} password - Password
- * @returns {Object} - User object and token
- */
-const registerUser = async (username, email, password) => {
-	/**
-	 * TODO: Implementați funcția de înregistrare a unui utilizator.
-	 * Aceasta ar trebui să includă:
-	 * 1. Verificarea dacă utilizatorul există deja în baza de date (după email sau username).
-	 * 2. Crearea unui nou utilizator dacă nu există deja.
-	 * 3. Generarea unui token JWT pentru autentificare.
-	 * 4. Returnarea obiectului utilizator și a tokenului generat.
-	 */
+const register = async ({ username, email, password }) => {
+	const existingUser = await User.findOne({ where: { email } });
+
+	if (existingUser) {
+		throw new Error("Email already registered");
+	}
+
+	const hashedPassword = await bcrypt.hash(password, 10);
+
+	const user = await User.create({
+		username,
+		email,
+		password: hashedPassword,
+	});
+
+	const token = generateToken(user);
+
+	return {
+		token,
+		user: {
+			id: user.id,
+			username: user.username,
+			email: user.email,
+		},
+	};
 };
 
-/**
- * Login user
- * @param {string} email - Email
- * @param {string} password - Password
- * @returns {Object} - User object and token
- */
-const loginUser = async (email, password) => {
-	/**
-	 * TODO: Implementați funcția de autentificare a unui utilizator.
-	 * Aceasta ar trebui să includă:
-	 * 1. Căutarea utilizatorului în baza de date pe baza emailului.
-	 * 2. Verificarea parolei utilizatorului.
-	 * 3. Generarea unui token JWT pentru sesiunea utilizatorului.
-	 * 4. Returnarea utilizatorului (fără parolă) și a tokenului generat.
-	 */
+const login = async ({ email, password }) => {
+	const user = await User.findOne({ where: { email } });
+
+	if (!user) {
+		throw new Error("Invalid email or password");
+	}
+
+	const isMatch = await bcrypt.compare(password, user.password);
+
+	if (!isMatch) {
+		throw new Error("Invalid email or password");
+	}
+
+	const token = generateToken(user);
+
+	return {
+		token,
+		user: {
+			id: user.id,
+			username: user.username,
+			email: user.email,
+		},
+	};
 };
 
 module.exports = {
-	registerUser,
-	loginUser,
+	register,
+	login,
 };

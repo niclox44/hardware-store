@@ -7,14 +7,22 @@ const authService = require("../services/authService");
  * @param {Function} next - Express next middleware function
  */
 const register = async (req, res, next) => {
-	/**
-	 * TODO:  Implementați funcția de inregistrare (register).
-	 * Această funcție ar trebui să:
-	 * 1. Primească datele utilizatorului (username, email și parolă).
-	 * 2. Valideze câmpurile de intrare pentru a preveni erorile.
-	 * 3. Creeze un utilizator nou folosind serviciul authService.
-	 * 4. Returneze un răspuns corespunzător (de exemplu, un mesaj de succes sau un JWT token dacă este necesar).
-	 */
+	try {
+		const { username, email, password } = req.body;
+
+		if (!username || !email || !password) {
+			return res.status(400).json({ message: "Username, email and password are required" });
+		}
+
+		const result = await authService.register({ username, email, password });
+
+		return res.status(201).json({
+			message: "User registered successfully",
+			...result,
+		});
+	} catch (error) {
+		return res.status(400).json({ message: error.message });
+	}
 };
 
 /**
@@ -24,14 +32,22 @@ const register = async (req, res, next) => {
  * @param {Function} next - Express next middleware function
  */
 const login = async (req, res, next) => {
-	/**
-	 * TODO: Implementați funcția de autentificare (login).
-	 * Această funcție ar trebui să:
-	 * 1. Primească datele de autentificare ale utilizatorului (email & parolă).
-	 * 2. Valideze câmpurile de intrare pentru a preveni erorile.
-	 * 3. Autentifice utilizatorul folosind serviciul authService.
-	 * 4. Returneze un răspuns corespunzător (ex. token JWT în cazul unui succes).
-	 */
+	try {
+		const { email, password } = req.body;
+
+		if (!email || !password) {
+			return res.status(400).json({ message: "Email and password are required" });
+		}
+
+		const result = await authService.login({ email, password });
+
+		return res.status(200).json({
+			message: "Login successful",
+			...result,
+		});
+	} catch (error) {
+		return res.status(401).json({ message: error.message });
+	}
 };
 
 /**
@@ -41,13 +57,17 @@ const login = async (req, res, next) => {
  * @param {Function} next - Express next middleware function
  */
 const getProfile = async (req, res, next) => {
-	/**
-	 * TODO: Implementare funcția de getProfile.
-	 * Această funcție ar trebui să:
-	 * 1. Preia informațiile utilizatorului autentificat.
-	 * 2. Returneze detaliile profilului acestuia.
-	 * 3. Să fie protejată printr-un middleware de autentificare pentru a permite doar utilizatorilor autentificați accesul.
-	 */
+	try {
+		return res.status(200).json({
+			user: {
+				id: req.user.id,
+				username: req.user.username,
+				email: req.user.email,
+			},
+		});
+	} catch (error) {
+		next(error);
+	}
 };
 
 module.exports = {

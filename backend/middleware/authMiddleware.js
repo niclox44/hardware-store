@@ -1,32 +1,28 @@
-const jwt = require("jsonwebtoken");
 const { User } = require("../models");
-require("dotenv").config();
+const { verifyToken } = require("../utils/jwtHelper");
 
-/**
- * Middleware to authenticate JWT token
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const authenticate = async (err, req, res, next) => {
-	if (err) {
-		return res.status(401).json({ message: "Unauthorized" });
+const authenticate = async (req, res, next) => {
+	const authHeader = req.headers.authorization;
+
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return res.status(401).json({ message: "No token provided" });
 	}
-	const token = req.headers.authorization;
-	if (!token || !token.startsWith("Bearer")) {
-		return res.status(401).json({ message: "Unauthorized" });
-	}
-	const tokenString = token.split(" ")[1];
+
+	const token = authHeader.split(" ")[1];
+
 	try {
-		const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
-		const user = await User.findOne({ where: { id: decoded.id } });
+		const decoded = verifyToken(token);
+
+		const user = await User.findByPk(decoded.id);
+
 		if (!user) {
-			return res.status(401).json({ message: "Unauthorized" });
+			return res.status(401).json({ message: "User not found" });
 		}
+
 		req.user = user;
 		next();
 	} catch (error) {
-		next(error);
+		return res.status(401).json({ message: "Invalid or expired token" });
 	}
 };
 

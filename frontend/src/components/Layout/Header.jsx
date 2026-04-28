@@ -2,18 +2,38 @@ import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
-/**
- * TODO: Implementați componenta Header.
- * Aceasta ar trebui să:
- * 1. Afișeze titlul aplicației și navigarea între pagini.
- * 2. Verifice dacă utilizatorul este autentificat.
- * 3. Dacă este autentificat, să afișeze butonul de logout și numele utilizatorului.
- * 4. Dacă nu este autentificat, să afișeze link-urile către login și înregistrare.
- * 5. Asigure navigarea corectă după logout.
- */
-
 const Header = () => {
-	return <></>;
+	const { isAuthenticated, logout } = useContext(AuthContext);
+	const navigate = useNavigate();
+
+	const handleLogout = () => {
+		logout();
+		navigate("/login");
+	};
+
+	return (
+		<header className="header">
+			<h2>Hardware Store</h2>
+
+			<nav>
+				<Link to="/">Home</Link>{" | "}
+
+				{isAuthenticated ? (
+					<>
+						<Link to="/dashboard">Dashboard</Link>{" | "}
+						<Link to="/products">Products</Link>{" | "}
+						<Link to="/suppliers">Suppliers</Link>{" | "}
+						<button onClick={handleLogout}>Logout</button>
+					</>
+				) : (
+					<>
+						<Link to="/login">Login</Link>{" | "}
+						<Link to="/register">Register</Link>
+					</>
+				)}
+			</nav>
+		</header>
+	);
 };
 
 export default Header;
